@@ -25,7 +25,7 @@
     </HorizontalScrollView>
 
     <LinearLayout
-        android:id="@+id/imgLinearLayout"
+        android:id="@+id/btnLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
@@ -57,19 +57,21 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="24dp"
         android:text="@string/label_choose_image_processing"
         android:textAlignment="center"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imgLinearLayout" />
+        app:layout_constraintTop_toBottomOf="@+id/btnLayout" />
 
     <Spinner
         android:id="@+id/imgProcSpinner"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
         app:layout_constraintEnd_toEndOf="@+id/imgProcLabel"
         app:layout_constraintStart_toStartOf="@+id/imgProcLabel"
         app:layout_constraintTop_toBottomOf="@+id/imgProcLabel" />
@@ -78,7 +80,7 @@
         android:id="@+id/procLocLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="32dp"
         android:text="@string/label_choose_processing_location"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
