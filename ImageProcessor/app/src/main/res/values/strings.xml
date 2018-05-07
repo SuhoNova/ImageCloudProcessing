@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">ImageProcessor</string>
+    <string name="btn_camera">Camera</string>
+    <string name="btn_gallery">Gallery</string>
+    <string name="label_choose_image_processing">Choose Image Processing</string>
+    <string name="label_choose_processing_location">Start Processing Locally or Remotely</string>
+    <string name="label_processing_feedback">Processing Feedback</string>
+    <string name="label_processing_used">Processing Used</string>
+    <string name="label_before">Before</string>
+    <string name="label_after">After</string>
+    <string name="label_time_taken">Time Taken: ?</string>
+    <string name="proc_local">Process Locally</string>
+    <string name="proc_remote">Process Remotely</string>
 </resources>
