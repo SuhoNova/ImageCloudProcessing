@@ -3,11 +3,13 @@ package com.bankai.bleach.imageprocessor;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -42,9 +44,19 @@ public class ResultActivity extends AppCompatActivity {
         _afterArray = findViewById(R.id.afterArray);
         _afterScrollView = findViewById(R.id.afterScrollView);
 
+        Button returnButton = findViewById(R.id.returnButton);
 
-        TextView _processingUsedLabel = findViewById(R.id.processingUsedLabel);
-        _processingUsedLabel.setText(getIntent().getStringExtra(MainActivity.ID_PROCESSING_TYPE));
+        returnButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(ResultActivity.this, MainActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+
+        TextView processingUsedLabel = findViewById(R.id.processingUsedLabel);
+        processingUsedLabel.setText(getIntent().getStringExtra(MainActivity.ID_PROCESSING_TYPE));
 
         _uriList = (ArrayList<Uri>) getIntent().getSerializableExtra(MainActivity.ID_URIS);
 
@@ -74,6 +86,11 @@ public class ResultActivity extends AppCompatActivity {
      */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
     public void showProgressView(final boolean show) {
+        if(show){
+            setTitle("Professor Image の Progress");
+        } else {
+            setTitle("Professor Image の Results");
+        }
         // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
         // for very easy animations. If available, use these APIs to fade-in
         // the progress spinner.

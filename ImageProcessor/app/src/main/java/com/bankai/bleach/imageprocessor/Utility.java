@@ -38,7 +38,6 @@ public class Utility {
 
             imageView.setScaleType(ImageView.ScaleType.FIT_START);
             imageView.setImageBitmap(thumbnail);
-            // imageView.setPadding(10,0,0,0);
 
             imageView.setOnClickListener(new View.OnClickListener() {
                 @Override

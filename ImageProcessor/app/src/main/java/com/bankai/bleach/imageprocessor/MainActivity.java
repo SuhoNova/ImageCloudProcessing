@@ -40,10 +40,6 @@ public class MainActivity extends AppCompatActivity{
     public final static String ID_PROCESSING_TYPE = "4";
     public final static String ID_URIS = "5";
 
-    private Button _cameraBtn;
-    private Button _galleryBtn;
-    private Button _localBtn;
-    private Button _remoteBtn;
     private HorizontalScrollView _horzScrollView;
     private LinearLayout _imgArray;
     private Spinner _imgProcSpinner;
@@ -56,17 +52,44 @@ public class MainActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        _cameraBtn = findViewById(R.id.cameraButton);
-        _galleryBtn = findViewById(R.id.galleryButton);
-        _localBtn = findViewById(R.id.localProcButton);
-        _remoteBtn = findViewById(R.id.remoteProcButton);
+        setTitle("Professor Image");
+
+        Button cameraBtn = findViewById(R.id.cameraButton);
+        Button galleryBtn = findViewById(R.id.galleryButton);
+        Button localBtn = findViewById(R.id.localProcButton);
+        Button remoteBtn = findViewById(R.id.remoteProcButton);
+
         _imgArray = findViewById(R.id.imgArray);
         _horzScrollView = findViewById(R.id.horizontalScrollView);
         _imgProcSpinner = findViewById(R.id.imgProcSpinner);
 
         _uriList = new ArrayList<>();
 
-        setOnClickListenersForButtons();
+        cameraBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onCameraBtnClicked();
+            }
+        });
+        galleryBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onGalleryBtnClicked();
+            }
+        });
+        localBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onProcessingBtnClicked(true);
+            }
+        });
+        remoteBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onProcessingBtnClicked(false);
+            }
+        });
+
         populateImgProcSpinner();
 
     }
@@ -79,33 +102,6 @@ public class MainActivity extends AppCompatActivity{
         ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, imageProcOptions);
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         _imgProcSpinner.setAdapter(dataAdapter);
-    }
-
-    private void setOnClickListenersForButtons(){
-        _cameraBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onCameraBtnClicked();
-            }
-        });
-        _galleryBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onGalleryBtnClicked();
-            }
-        });
-        _localBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onProcessingBtnClicked(true);
-            }
-        });
-        _remoteBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onProcessingBtnClicked(false);
-            }
-        });
     }
 
     @Override
@@ -197,6 +193,7 @@ public class MainActivity extends AppCompatActivity{
         intent.putExtra(ID_PROCESSING_TYPE,(String)_imgProcSpinner.getSelectedItem());
         intent.putExtra(ID_URIS,_uriList);
         startActivity(intent);
+        finish();
     }
 
     private boolean checkAndRequestPermission(final Activity activity, final String permissionNeeded, final int permissionTracker)

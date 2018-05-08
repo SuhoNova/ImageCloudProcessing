@@ -12,6 +12,6 @@
     <string name="label_processing_feedback">Processing Feedback</string>
     <string name="label_processing_used">Processing Used</string>
     <string name="label_before">Before</string>
-    <string name="label_after">After</string>
-    <string name="label_time_taken">Time Taken: ?</string>
+    <string name="label_after">to</string>
+    <string name="label_time_taken">Time Taken: 0s</string>
 </resources>
