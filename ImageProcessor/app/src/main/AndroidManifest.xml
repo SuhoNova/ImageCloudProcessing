@@ -26,6 +26,7 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -33,8 +34,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ProcessingActivity" />
-        <activity android:name=".ResultActivity"></activity>
+        <activity android:name=".ResultActivity" />
     </application>
 
 </manifest>
