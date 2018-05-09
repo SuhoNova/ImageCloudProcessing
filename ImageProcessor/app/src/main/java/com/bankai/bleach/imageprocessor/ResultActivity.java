@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -70,6 +71,70 @@ public class ResultActivity extends AppCompatActivity {
         }
     }
 
+    class LocalProcessingTask  extends AsyncTask<Void, Void, Void> {
+        private ResultActivity _resultActivity;
+
+        public LocalProcessingTask(ResultActivity resultActivity) {
+            _resultActivity = resultActivity;
+            // TODO can pass in other stuff you want to
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                publishProgress();
+                // Simulate processing.
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+            }
+
+            _resultActivity.toBeChangedFunctionToPopulateImageArraysAfterGettingResults();
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... values) {
+            _resultActivity.setProgressText("Processing Locally ...");
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            _resultActivity.showProgressView(false);
+        }
+    }
+
+    class RemoteProcessingTask  extends AsyncTask<Void, Void, Void> {
+        private ResultActivity _resultActivity;
+
+        public RemoteProcessingTask(ResultActivity resultActivity) {
+            _resultActivity = resultActivity;
+            // TODO can pass in other stuff you want to
+        }
+
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                publishProgress();
+                // Simulate processing.
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+            }
+
+            _resultActivity.toBeChangedFunctionToPopulateImageArraysAfterGettingResults();
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... values) {
+            _resultActivity.setProgressText("Processing Remotely ...");
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            _resultActivity.showProgressView(false);
+        }
+    }
     public void setProgressText(String text){
         _progressText.setText(text);
     }
