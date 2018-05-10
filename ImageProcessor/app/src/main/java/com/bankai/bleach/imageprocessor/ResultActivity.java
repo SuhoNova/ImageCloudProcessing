@@ -1,6 +1,7 @@
 package com.bankai.bleach.imageprocessor;
 
 import android.animation.Animator;
+import android.provider.MediaStore;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Intent;
@@ -15,7 +16,7 @@ import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
+import android.database.Cursor;
 import java.util.ArrayList;
 
 public class ResultActivity extends AppCompatActivity {
@@ -30,6 +31,7 @@ public class ResultActivity extends AppCompatActivity {
     private HorizontalScrollView _beforeScrollView;
     private HorizontalScrollView _afterScrollView;
     private ArrayList<Uri> _uriList;
+    private TextView processingUsedLabel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +58,7 @@ public class ResultActivity extends AppCompatActivity {
             }
         });
 
-        TextView processingUsedLabel = findViewById(R.id.processingUsedLabel);
+        processingUsedLabel = findViewById(R.id.processingUsedLabel);
         processingUsedLabel.setText(getIntent().getStringExtra(MainActivity.ID_PROCESSING_TYPE));
 
         _uriList = (ArrayList<Uri>) getIntent().getSerializableExtra(MainActivity.ID_URIS);
@@ -70,7 +72,15 @@ public class ResultActivity extends AppCompatActivity {
             new RemoteProcessingTask(this).execute();
         }
     }
-
+    public String convertMediaUriToPath(Uri uri) {
+        String [] proj={MediaStore.Images.Media.DATA};
+        Cursor cursor = getContentResolver().query(uri, proj,  null, null, null);
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        String path = cursor.getString(column_index);
+        cursor.close();
+        return path;
+    }
     class LocalProcessingTask  extends AsyncTask<Void, Void, Void> {
         private ResultActivity _resultActivity;
 
@@ -82,6 +92,15 @@ public class ResultActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... voids) {
             try {
+                Uri uri = _uriList.get(0);
+                String stringUri = convertMediaUriToPath(uri);
+                if (processingUsedLabel.getText().toString().equals("Gaussian Blur")){
+                    ProcessingFunctions.GaussianBlur(stringUri);
+                } else if (processingUsedLabel.getText().toString().equals("Sobel Edge")){
+                    ProcessingFunctions.SobelEdge(stringUri);
+                } else {
+                    ProcessingFunctions.CannyContour(stringUri);
+                }
                 publishProgress();
                 // Simulate processing.
                 Thread.sleep(2000);
