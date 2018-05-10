@@ -100,6 +100,7 @@ public class MainActivity extends AppCompatActivity{
         imageProcOptions.add("Gaussian Blur");
         imageProcOptions.add("Sobel Edge");
         imageProcOptions.add("Canny Contour");
+        imageProcOptions.add("Combination Transform");
         ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, imageProcOptions);
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         _imgProcSpinner.setAdapter(dataAdapter);
