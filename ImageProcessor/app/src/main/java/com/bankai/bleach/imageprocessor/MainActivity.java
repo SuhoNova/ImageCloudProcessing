@@ -97,8 +97,9 @@ public class MainActivity extends AppCompatActivity{
     protected void populateImgProcSpinner(){
         ArrayList<String> imageProcOptions = new ArrayList<>();
         // TODO change this to be filled up with the processing required
-        imageProcOptions.add("Seam Carving");
-        imageProcOptions.add("Beautify Face");
+        imageProcOptions.add("Gaussian Blur");
+        imageProcOptions.add("Sobel Edge");
+        imageProcOptions.add("Canny Contour");
         ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, imageProcOptions);
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         _imgProcSpinner.setAdapter(dataAdapter);
