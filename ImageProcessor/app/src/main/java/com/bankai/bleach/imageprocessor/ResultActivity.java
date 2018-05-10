@@ -98,7 +98,7 @@ public class ResultActivity extends AppCompatActivity {
                     ProcessingFunctions.GaussianBlur(stringUri);
                 } else if (processingUsedLabel.getText().toString().equals("Sobel Edge")){
                     ProcessingFunctions.SobelEdge(stringUri);
-                } else if (processingUsedLabel.getText().toString.equals("Canny Contour")){
+                } else if (processingUsedLabel.getText().toString().equals("Canny Contour")){
                     ProcessingFunctions.CannyContour(stringUri);
                 } else {
                     ProcessingFunctions.CombinationTransform(stringUri);
