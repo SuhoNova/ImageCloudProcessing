@@ -95,21 +95,7 @@ public class ResultActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... voids) {
             try {
-                ArrayList<String> array = new ArrayList<>();
-                for (Uri item: _uriList){
-                    String temp = item.toString();
-                    Log.println(ASSERT,"string", temp);
-                    array.add(temp);
-                }
-                if (processingUsedLabel.getText().toString().equals("Gaussian Blur")){
-                    ProcessingFunctions.GaussianBlur(array);
-                } else if (processingUsedLabel.getText().toString().equals("Sobel Edge")){
-                    ProcessingFunctions.SobelEdge(array);
-                } else if (processingUsedLabel.getText().toString().equals("Canny Contour")){
-                    ProcessingFunctions.CannyContour(array);
-                } else {
-                    ProcessingFunctions.CombinationTransform(array);
-                }
+            // Add BoofCV functions
                 publishProgress();
                 // Simulate processing.
                 Thread.sleep(2000);
