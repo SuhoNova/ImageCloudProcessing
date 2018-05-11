@@ -10,6 +10,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.HorizontalScrollView;
@@ -18,6 +19,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.database.Cursor;
 import java.util.ArrayList;
+
+import static android.util.Log.ASSERT;
 
 public class ResultActivity extends AppCompatActivity {
     private View _progressView;
@@ -92,21 +95,26 @@ public class ResultActivity extends AppCompatActivity {
         @Override
         protected Void doInBackground(Void... voids) {
             try {
-                Uri uri = _uriList.get(0);
-                String stringUri = convertMediaUriToPath(uri);
+                ArrayList<String> array = new ArrayList<>();
+                for (Uri item: _uriList){
+                    String temp = item.toString();
+                    Log.println(ASSERT,"string", temp);
+                    array.add(temp);
+                }
                 if (processingUsedLabel.getText().toString().equals("Gaussian Blur")){
-                    ProcessingFunctions.GaussianBlur(stringUri);
+                    ProcessingFunctions.GaussianBlur(array);
                 } else if (processingUsedLabel.getText().toString().equals("Sobel Edge")){
-                    ProcessingFunctions.SobelEdge(stringUri);
+                    ProcessingFunctions.SobelEdge(array);
                 } else if (processingUsedLabel.getText().toString().equals("Canny Contour")){
-                    ProcessingFunctions.CannyContour(stringUri);
+                    ProcessingFunctions.CannyContour(array);
                 } else {
-                    ProcessingFunctions.CombinationTransform(stringUri);
+                    ProcessingFunctions.CombinationTransform(array);
                 }
                 publishProgress();
                 // Simulate processing.
                 Thread.sleep(2000);
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
+                Log.println(ASSERT,"Exception", e.toString());
             }
 
             _resultActivity.toBeChangedFunctionToPopulateImageArraysAfterGettingResults();
