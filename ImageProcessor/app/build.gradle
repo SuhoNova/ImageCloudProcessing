@@ -2,7 +2,6 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 27
-    useLibrary 'org.apache.http.legacy'
     defaultConfig {
         applicationId "com.bankai.bleach.imageprocessor"
         minSdkVersion 21
