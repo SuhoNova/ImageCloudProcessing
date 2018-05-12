@@ -18,6 +18,7 @@ import android.widget.Button;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -144,8 +145,14 @@ public class ResultActivity extends AppCompatActivity {
     }
 
     public void displayProcessingResults(){
-        for(Uri uri : _uriList){
-            Utility.displayImageThumbnail(this, uri, null, _beforeArray, _beforeScrollView);
+        try {
+            for (Uri uri : _uriList) {
+                Utility.displayImageThumbnail(this, uri, null, _beforeArray, _beforeScrollView);
+            }
+        } catch (Exception e) {
+            Log.println(ASSERT,"Displaying Old", e.toString());
+            // TODO possible problem with Security Exception of trying to reuse Uris, non reproduceable. possibly solved, put here for safety
+            Toast.makeText(this,"Problem displaying Images from before",Toast.LENGTH_SHORT).show();
         }
         for(Uri uri : _processedUriList){
             Utility.displayImageThumbnail(this, uri, null, _afterArray, _afterScrollView);
