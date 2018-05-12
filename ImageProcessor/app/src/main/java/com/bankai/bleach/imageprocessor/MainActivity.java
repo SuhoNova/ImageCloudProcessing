@@ -58,7 +58,6 @@ public class MainActivity extends AppCompatActivity{
         Button galleryBtn = findViewById(R.id.galleryButton);
         Button localBtn = findViewById(R.id.localProcButton);
         Button remoteBtn = findViewById(R.id.remoteProcButton);
-        Button restBtn = findViewById(R.id.restTestButton);
 
         _imgArray = findViewById(R.id.imgArray);
         _horzScrollView = findViewById(R.id.horizontalScrollView);
@@ -88,12 +87,6 @@ public class MainActivity extends AppCompatActivity{
             @Override
             public void onClick(View view) {
                 onProcessingBtnClicked(false);
-            }
-        });
-        restBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onRestBtnClicked();
             }
         });
 
@@ -203,10 +196,6 @@ public class MainActivity extends AppCompatActivity{
         intent.putExtra(ID_URIS,_uriList);
         startActivity(intent);
         finish();
-    }
-
-    private void onRestBtnClicked(){
-
     }
 
     private boolean checkAndRequestPermission(final Activity activity, final String permissionNeeded, final int permissionTracker)
