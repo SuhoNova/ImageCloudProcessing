@@ -23,24 +23,21 @@ public class ProcessImageResource {
 	
 	@POST
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
-	public Response processImage(MultipartFormDataInput multipart) throws IOException {
+	@Produces("image/jpeg")
+	public byte[] processImage(MultipartFormDataInput multipart) throws IOException {
 		InputStream inputStream = multipart.getFormDataPart("file", InputStream.class, null);
 
         try {
-        	BufferedImage image = ImageIO.read(inputStream);
-            if(image == null) {
-            	return Response.status(400).build();
-            } else {
+        		BufferedImage image = ImageIO.read(inputStream);
             	BufferedImage processedImage = BlurImage.blurImage(image);
             	
             	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            	ImageIO.write(processedImage, "jpg", baos );
+            	ImageIO.write(processedImage, "jpeg", baos );
             	baos.flush();
             	byte[] imageInByte = baos.toByteArray();
             	baos.close();
             	
-            	return Response.ok(imageInByte).build();
-            }
+            	return imageInByte;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
