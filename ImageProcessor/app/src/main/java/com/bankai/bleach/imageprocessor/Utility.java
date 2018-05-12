@@ -17,6 +17,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
@@ -33,7 +34,6 @@ public class Utility {
         final ImageView imageView = new ImageView(activity);
         try {
             Bitmap thumbnail = MediaStore.Images.Media.getBitmap(activity.getContentResolver(), imgUri);
-            thumbnail = rotateImageIfRequired(activity,thumbnail,imgUri);
 
             int desiredWidth = Math.round((((float) thumbnail.getWidth() / thumbnail.getHeight()) * THUMBNAIL_HEIGHT));
 
@@ -103,7 +103,9 @@ public class Utility {
      * Android camera takes photo in the phone orientation, so you have to read the
      * orientation information to find the rotation then rotate.
      */
-    private static Bitmap rotateImageIfRequired(Activity activity, Bitmap img, Uri imageUri) throws IOException {
+    public static void correctImageRotation(Activity activity, Uri imageUri, File imageFile) throws IOException {
+        Bitmap img = MediaStore.Images.Media.getBitmap(activity.getContentResolver(), imageUri);
+
         int rotation;
         InputStream in = activity.getContentResolver().openInputStream(imageUri);
         ExifInterface ei = new ExifInterface(in);
@@ -119,19 +121,21 @@ public class Utility {
                 rotation =  270;
                 break;
             default:
-                return img;
+                return;
         }
         Matrix matrix = new Matrix();
         matrix.postRotate(rotation);
         Bitmap rotatedImg = Bitmap.createBitmap(img, 0, 0, img.getWidth(), img.getHeight(), matrix, true);
         img.recycle();
-        return rotatedImg;
+
+        FileOutputStream fos = new FileOutputStream(imageFile);
+        rotatedImg.compress(Bitmap.CompressFormat.JPEG, 100, fos);
     }
 
 
 
     public static File getEmptyFileThatIsNotCreated() {
-        String uniqueName = "IPROC_" + new SimpleDateFormat("yyMMddHHmmss").format(new Date());
+        String uniqueName = "IPROC_" + new SimpleDateFormat("yyMMddHHmmss").format(new Date()) + System.currentTimeMillis();
 
         File photoDirectory = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES).getAbsolutePath()+File.separatorChar+"ImageProc");

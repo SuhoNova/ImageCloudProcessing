@@ -2,13 +2,11 @@ package com.bankai.bleach.imageprocessor;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -25,9 +23,7 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
 import static android.util.Log.ASSERT;
 
@@ -46,6 +42,7 @@ public class MainActivity extends AppCompatActivity{
 
     private ArrayList<Uri> _uriList;
     private Uri _latestPhotoUri;
+    private File _latestPhoto;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,9 +106,10 @@ public class MainActivity extends AppCompatActivity{
             if (requestCode == RC_CAMERA) {
                 try {
                     Log.println(ASSERT,"Camera Pic Uri", _latestPhotoUri.toString());
-                    Log.println(ASSERT,"Camera Pic Path", _latestPhotoUri.getPath());
 
                     _uriList.add(_latestPhotoUri);
+
+                    Utility.correctImageRotation(this,_latestPhotoUri,_latestPhoto);
 
                     Utility.displayImageThumbnail(this, _latestPhotoUri, _uriList, _imgArray, _horzScrollView);
                 } catch (Exception e) {
@@ -140,7 +138,7 @@ public class MainActivity extends AppCompatActivity{
             if (checkAndRequestPermission(this, Manifest.permission.CAMERA, RC_CAMERA)) {
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-                File _latestPhoto = Utility.getEmptyFileThatIsNotCreated();
+                _latestPhoto = Utility.getEmptyFileThatIsNotCreated();
 
                 // wrap File object into a content provider
                 // required for API >= 24
