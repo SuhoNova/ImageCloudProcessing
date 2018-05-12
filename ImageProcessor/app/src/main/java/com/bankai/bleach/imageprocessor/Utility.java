@@ -34,6 +34,7 @@ public class Utility {
         final ImageView imageView = new ImageView(activity);
         try {
             Bitmap thumbnail = MediaStore.Images.Media.getBitmap(activity.getContentResolver(), imgUri);
+            thumbnail = rotateImageIfRequired(activity,thumbnail,imgUri);
 
             int desiredWidth = Math.round((((float) thumbnail.getWidth() / thumbnail.getHeight()) * THUMBNAIL_HEIGHT));
 
@@ -104,35 +105,49 @@ public class Utility {
      * orientation information to find the rotation then rotate.
      */
     public static void correctImageRotation(Activity activity, Uri imageUri, File imageFile) throws IOException {
+        if(getPicOrientation(activity,imageUri) == 0){
+            return;
+        }
+
         Bitmap img = MediaStore.Images.Media.getBitmap(activity.getContentResolver(), imageUri);
 
-        int rotation;
-        InputStream in = activity.getContentResolver().openInputStream(imageUri);
-        ExifInterface ei = new ExifInterface(in);
-        int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
-        switch (orientation) {
-            case ExifInterface.ORIENTATION_ROTATE_90:
-                rotation = 90;
-                break;
-            case ExifInterface.ORIENTATION_ROTATE_180:
-                rotation = 180;
-                break;
-            case ExifInterface.ORIENTATION_ROTATE_270:
-                rotation =  270;
-                break;
-            default:
-                return;
-        }
-        Matrix matrix = new Matrix();
-        matrix.postRotate(rotation);
-        Bitmap rotatedImg = Bitmap.createBitmap(img, 0, 0, img.getWidth(), img.getHeight(), matrix, true);
-        img.recycle();
+        Bitmap rotatedImg = rotateImageIfRequired(activity,img,imageUri);
 
         FileOutputStream fos = new FileOutputStream(imageFile);
         rotatedImg.compress(Bitmap.CompressFormat.JPEG, 100, fos);
     }
 
+    /**
+     * Android camera takes photo in the phone orientation, so you have to read the
+     * orientation information to find the rotation then rotate.
+     */
+    public static Bitmap rotateImageIfRequired(Activity activity, Bitmap img, Uri imageUri) throws IOException {
+        int rotation = getPicOrientation(activity,imageUri);
+        if(rotation == 0){
+            return img;
+        }
+        Matrix matrix = new Matrix();
+        matrix.postRotate(rotation);
+        Bitmap rotatedImg = Bitmap.createBitmap(img, 0, 0, img.getWidth(), img.getHeight(), matrix, true);
+        img.recycle();
+        return rotatedImg;
+    }
 
+    private static int getPicOrientation(Activity activity, Uri imageUri) throws IOException{
+        InputStream in = activity.getContentResolver().openInputStream(imageUri);
+        ExifInterface ei = new ExifInterface(in);
+        int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+        switch (orientation) {
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                return 90;
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                return 180;
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                return 270;
+            default:
+                return 0;
+        }
+    }
 
     public static File getEmptyFileThatIsNotCreated() {
         String uniqueName = "IPROC_" + new SimpleDateFormat("yyMMddHHmmss").format(new Date()) + System.currentTimeMillis();

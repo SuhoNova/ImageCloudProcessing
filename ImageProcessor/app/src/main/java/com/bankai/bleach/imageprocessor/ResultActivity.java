@@ -120,6 +120,7 @@ public class ResultActivity extends AppCompatActivity {
         for(Uri imgUri: _uriList) {
             File outputFile = Utility.getEmptyFileThatIsNotCreated();
             Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imgUri);
+            bitmap = Utility.rotateImageIfRequired(this,bitmap,imgUri);
 
             bitmap = Processing.gaussianBlur(bitmap);
 
