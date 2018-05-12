@@ -1,6 +1,7 @@
 package com.bankai.bleach.imageprocessor;
 
 import android.animation.Animator;
+import android.graphics.Bitmap;
 import android.provider.MediaStore;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
@@ -8,6 +9,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,9 +17,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.database.Cursor;
+
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 
 import static android.util.Log.ASSERT;
@@ -26,15 +29,17 @@ public class ResultActivity extends AppCompatActivity {
     private View _progressView;
     private View _resultView;
 
-    private ProgressBar _progressBar;
     private TextView _progressText;
+    private TextView _timeTakenLabel;
 
     private LinearLayout _beforeArray;
     private LinearLayout _afterArray;
     private HorizontalScrollView _beforeScrollView;
     private HorizontalScrollView _afterScrollView;
     private ArrayList<Uri> _uriList;
-    private TextView processingUsedLabel;
+    private ArrayList<Uri> _processedUriList;
+
+    private boolean _doLocalProcessing;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,8 +48,8 @@ public class ResultActivity extends AppCompatActivity {
 
         _progressView = findViewById(R.id.progressView);
         _resultView = findViewById(R.id.resultView);
-        _progressBar = findViewById(R.id.progressBar);
         _progressText = findViewById(R.id.progressText);
+        _timeTakenLabel = findViewById(R.id.timeTakenLabel);
         _beforeArray = findViewById(R.id.beforeArray);
         _beforeScrollView = findViewById(R.id.beforeScrollView);
         _afterArray = findViewById(R.id.afterArray);
@@ -61,102 +66,87 @@ public class ResultActivity extends AppCompatActivity {
             }
         });
 
-        processingUsedLabel = findViewById(R.id.processingUsedLabel);
+        TextView processingUsedLabel = findViewById(R.id.processingUsedLabel);
         processingUsedLabel.setText(getIntent().getStringExtra(MainActivity.ID_PROCESSING_TYPE));
 
         _uriList = (ArrayList<Uri>) getIntent().getSerializableExtra(MainActivity.ID_URIS);
+        _processedUriList = new ArrayList<>();
 
         showProgressView(true);
 
-        boolean _doLocalProcessing = getIntent().getBooleanExtra(MainActivity.ID_DO_LOCAL_PROCESSING,true);
+        _doLocalProcessing = getIntent().getBooleanExtra(MainActivity.ID_DO_LOCAL_PROCESSING,true);
         if(_doLocalProcessing){
-            new LocalProcessingTask(this).execute();
+            setProgressText("Processing Locally");
         } else {
-            new RemoteProcessingTask(this).execute();
+            setProgressText("Processing Remotely");
         }
+        new ProcessingTask().execute();
     }
-    public String convertMediaUriToPath(Uri uri) {
-        String [] proj={MediaStore.Images.Media.DATA};
-        Cursor cursor = getContentResolver().query(uri, proj,  null, null, null);
-        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-        cursor.moveToFirst();
-        String path = cursor.getString(column_index);
-        cursor.close();
-        return path;
-    }
-    class LocalProcessingTask  extends AsyncTask<Void, Void, Void> {
-        private ResultActivity _resultActivity;
 
-        public LocalProcessingTask(ResultActivity resultActivity) {
-            _resultActivity = resultActivity;
-            // TODO can pass in other stuff you want to
-        }
+    private void setTimeTaken(long time){
+        _timeTakenLabel.setText("Time taken: "+(double)time/1000+"s");
+    }
+
+    class ProcessingTask  extends AsyncTask<Void, Void, Long> {
 
         @Override
-        protected Void doInBackground(Void... voids) {
+        protected Long doInBackground(Void... voids) {
+            long timeTaken = 0;
             try {
-            // Add BoofCV functions
-                publishProgress();
-                // Simulate processing.
-                Thread.sleep(2000);
+                if(_doLocalProcessing){
+                    timeTaken = localProcessing();
+                } else {
+                    // TODO implement REST code here
+                }
+
             } catch (Exception e) {
-                Log.println(ASSERT,"Exception", e.toString());
+                Log.println(ASSERT,"Processing", e.toString());
             }
 
-            _resultActivity.toBeChangedFunctionToPopulateImageArraysAfterGettingResults();
-            return null;
+            return timeTaken;
         }
 
         @Override
-        protected void onProgressUpdate(Void... values) {
-            _resultActivity.setProgressText("Processing Locally ...");
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            _resultActivity.showProgressView(false);
+        protected void onPostExecute(Long timeTaken) {
+            setTimeTaken(timeTaken);
+            displayProcessingResults();
+            showProgressView(false);
         }
     }
 
-    class RemoteProcessingTask  extends AsyncTask<Void, Void, Void> {
-        private ResultActivity _resultActivity;
+    private long localProcessing() throws Exception{
+        final long startTime = System.currentTimeMillis();
 
-        public RemoteProcessingTask(ResultActivity resultActivity) {
-            _resultActivity = resultActivity;
-            // TODO can pass in other stuff you want to
+        for(Uri imgUri: _uriList) {
+            File outputFile = Utility.getEmptyFileThatIsNotCreated();
+            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imgUri);
+
+            bitmap = Processing.gaussianBlur(bitmap);
+
+
+            FileOutputStream fos = new FileOutputStream(outputFile);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+
+            Uri processedImgUri = FileProvider.getUriForFile(ResultActivity.this, "com.bankai.bleach.fileprovider", outputFile);
+
+            _processedUriList.add(processedImgUri);
         }
+        final long endTime = System.currentTimeMillis();
+        long timeTaken = endTime - startTime;
+        Log.println(Log.ASSERT, "Time taken", timeTaken+"");
 
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-            try {
-                publishProgress();
-                // Simulate processing.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-            }
-
-            _resultActivity.toBeChangedFunctionToPopulateImageArraysAfterGettingResults();
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(Void... values) {
-            _resultActivity.setProgressText("Processing Remotely ...");
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            _resultActivity.showProgressView(false);
-        }
+        return timeTaken;
     }
+
     public void setProgressText(String text){
         _progressText.setText(text);
     }
 
-    public void toBeChangedFunctionToPopulateImageArraysAfterGettingResults(){
+    public void displayProcessingResults(){
         for(Uri uri : _uriList){
             Utility.displayImageThumbnail(this, uri, null, _beforeArray, _beforeScrollView);
+        }
+        for(Uri uri : _processedUriList){
             Utility.displayImageThumbnail(this, uri, null, _afterArray, _afterScrollView);
         }
     }
@@ -167,38 +157,31 @@ public class ResultActivity extends AppCompatActivity {
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
     public void showProgressView(final boolean show) {
         if(show){
-            setTitle("Professor Image の Progress");
+            setTitle("Processing");
         } else {
-            setTitle("Professor Image の Results");
+            setTitle("Results");
         }
         // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
         // for very easy animations. If available, use these APIs to fade-in
         // the progress spinner.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+        int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
 
-            _resultView.setVisibility(show ? View.GONE : View.VISIBLE);
-            _resultView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    _resultView.setVisibility(show ? View.GONE : View.VISIBLE);
-                }
-            });
+        _resultView.setVisibility(show ? View.GONE : View.VISIBLE);
+        _resultView.animate().setDuration(shortAnimTime).alpha(
+                show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                _resultView.setVisibility(show ? View.GONE : View.VISIBLE);
+            }
+        });
 
-            _progressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            _progressView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    _progressView.setVisibility(show ? View.VISIBLE : View.GONE);
-                }
-            });
-        } else {
-            // The ViewPropertyAnimator APIs are not available, so simply show
-            // and hide the relevant UI components.
-            _progressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            _resultView.setVisibility(show ? View.GONE : View.VISIBLE);
-        }
+        _progressView.setVisibility(show ? View.VISIBLE : View.GONE);
+        _progressView.animate().setDuration(shortAnimTime).alpha(
+                show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                _progressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            }
+        });
     }
 }

@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        setTitle("Professor Image");
+        setTitle("Image Processor");
 
         Button cameraBtn = findViewById(R.id.cameraButton);
         Button galleryBtn = findViewById(R.id.galleryButton);
@@ -96,11 +96,7 @@ public class MainActivity extends AppCompatActivity{
 
     protected void populateImgProcSpinner(){
         ArrayList<String> imageProcOptions = new ArrayList<>();
-        // TODO change this to be filled up with the processing required
         imageProcOptions.add("Gaussian Blur");
-        imageProcOptions.add("Sobel Edge");
-        imageProcOptions.add("Canny Contour");
-        imageProcOptions.add("Combination Transform");
         ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, imageProcOptions);
         dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         _imgProcSpinner.setAdapter(dataAdapter);
@@ -191,11 +187,7 @@ public class MainActivity extends AppCompatActivity{
                     alertBuilder.setCancelable(true);
                     alertBuilder.setTitle("Permission necessary");
                     alertBuilder.setMessage("This permission is needed for the proper functioning of the app.");
-                    alertBuilder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            ActivityCompat.requestPermissions(activity ,new String[]{permissionNeeded}, permissionTracker);
-                        }
-                    });
+                    alertBuilder.setPositiveButton(android.R.string.yes, (dialog, which) -> ActivityCompat.requestPermissions(activity ,new String[]{permissionNeeded}, permissionTracker));
                     AlertDialog alert = alertBuilder.create();
                     alert.show();
                 } else {
@@ -210,30 +202,3 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 }
-
-
-
-
-/*
-
-            .-""""-.       .-""""-.
-           /        \     /        \
-          /_        _\   /_        _\
-         // \      / \\ // \      / \\
-         |\__\    /__/| |\__\    /__/|
-          \    ||    /   \    ||    /
-           \        /     \        /
-            \  __  /       \  __  /
-    .-""""-. '.__.'.-""""-. '.__.'.-""""-.
-   /        \ |  |/        \ |  |/        \        _____________________________
-  /_        _\|  /_        _\|  /_        _\      |                             |
- // \      / \\ // \      / \\ // \      / \\    <  Time to take over earth...  |
- |\__\    /__/| |\__\    /__/| |\__\    /__/|     |_____________________________|
-  \    ||    /   \    ||    /   \    ||    /
-   \        /     \        /     \        /
-    \  __  /       \  __  /       \  __  /
-     '.__.'         '.__.'         '.__.'
-      |  |           |  |           |  |
-      |  |           |  |           |  |
-
- */
