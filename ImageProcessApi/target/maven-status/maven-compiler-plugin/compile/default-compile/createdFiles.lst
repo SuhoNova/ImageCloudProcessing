@@ -1,2 +1,3 @@
+com\processimage\api\BlurImage.class
 com\processimage\api\ProcessImageApplication.class
 com\processimage\api\ProcessImageResource.class

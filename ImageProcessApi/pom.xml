@@ -7,6 +7,10 @@
   <version>0.0.1-SNAPSHOT</version>
   <name>ImageProcessApi Maven Webapp</name>
   <url>http://maven.apache.org</url>
+  <properties>
+		<servlet.container.port>10000</servlet.container.port>
+		<resteasy.version>3.1.4.Final</resteasy.version>
+	</properties>
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -14,56 +18,64 @@
       <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
-     <!-- https://mvnrepository.com/artifact/org.glassfish.jersey.bundles/jaxrs-ri -->
-    <dependency>
-        <groupId>org.glassfish.jersey.bundles</groupId>
-        <artifactId>jaxrs-ri</artifactId>
-        <version>2.25</version>
-    </dependency>
-    <!-- https://mvnrepository.com/artifact/org.glassfish.jersey.media/jersey-media-moxy -->
-    <dependency>
-        <groupId>org.glassfish.jersey.media</groupId>
-        <artifactId>jersey-media-moxy</artifactId>
-        <version>2.25</version>
-    </dependency>
-    
-    <!-- https://mvnrepository.com/artifact/javax.ws.rs/javax.ws.rs-api -->
-    <dependency>
-        <groupId>javax.ws.rs</groupId>
-        <artifactId>javax.ws.rs-api</artifactId>
-        <version>2.0.1</version>
-    </dependency>
-    <!-- https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api -->
-    <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
-        <version>3.1.0</version>
-    </dependency>
-    
-    <!-- https://mvnrepository.com/artifact/org.mortbay.jetty/jetty-maven-plugin -->
+    <!-- RESTEasy implementation -->
 	<dependency>
-	    <groupId>org.mortbay.jetty</groupId>
-	    <artifactId>jetty-maven-plugin</artifactId>
-	    <version>8.1.16.v20140903</version>
-	    <scope>test</scope>
+		<groupId>org.jboss.resteasy</groupId>
+		<artifactId>resteasy-jaxrs</artifactId>
+		<version>${resteasy.version}</version>
 	</dependency>
-
+	<!-- RESTEasy Client API -->
+	<dependency>
+		<groupId>org.jboss.resteasy</groupId>
+		<artifactId>resteasy-client</artifactId>
+		<version>${resteasy.version}</version>
+	</dependency>
+	<!-- RESTEasy deployment library -->
+	<dependency>
+		<groupId>org.jboss.resteasy</groupId>
+		<artifactId>resteasy-servlet-initializer</artifactId>
+		<version>${resteasy.version}</version>
+	</dependency>
+	<!-- https://mvnrepository.com/artifact/org.glassfish.jersey.media/jersey-media-moxy -->
+	<dependency>
+	    <groupId>org.glassfish.jersey.media</groupId>
+	    <artifactId>jersey-media-multipart</artifactId>
+	    <version>2.22.1</version>
+	</dependency>
 	<!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
 	<dependency>
 	    <groupId>commons-io</groupId>
 	    <artifactId>commons-io</artifactId>
-	    <version>2.5</version>
+	    <version>2.6</version>
 	</dependency>
-	
+	<dependency>
+	  <groupId>org.boofcv</groupId>
+	  <artifactId>boofcv-core</artifactId>
+	  <version>0.29</version>
+	</dependency>
   </dependencies>
+  
   <build>
     <finalName>ImageProcessApi</finalName>
    	<plugins>
-      <plugin>
-          <groupId>org.mortbay.jetty</groupId>
-          <artifactId>jetty-maven-plugin</artifactId>
-          <version>8.1.16.v20140903</version>
-      </plugin>
+		<plugin>
+			  <groupId>org.eclipse.jetty</groupId>
+			  <artifactId>jetty-maven-plugin</artifactId>
+			<version>9.3.23.v20180228</version>
+		  	<configuration>
+	          	<!-- <useManifestOnlyJar>false</useManifestOnlyJar>
+	          	<useSystemClassLoader>false</useSystemClassLoader> -->
+	          	<httpConnector>
+					<port>8080</port>
+				</httpConnector>
+				<webApp>
+					<contextPath>/</contextPath>
+				</webApp>
+				<scanIntervalSeconds>10</scanIntervalSeconds>
+				<stopPort>8005</stopPort>
+				<stopKey>STOP</stopKey>
+	    	</configuration>
+		</plugin>
   	</plugins>
   </build>
 
