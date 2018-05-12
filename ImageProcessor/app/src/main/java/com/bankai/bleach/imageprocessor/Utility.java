@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.net.Uri;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.media.ExifInterface;
 import android.support.v7.app.AlertDialog;
@@ -18,7 +19,9 @@ import android.widget.LinearLayout;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import static android.support.v4.content.FileProvider.getUriForFile;
 import static android.util.Log.ASSERT;
@@ -123,5 +126,24 @@ public class Utility {
         Bitmap rotatedImg = Bitmap.createBitmap(img, 0, 0, img.getWidth(), img.getHeight(), matrix, true);
         img.recycle();
         return rotatedImg;
+    }
+
+
+
+    public static File getEmptyFileThatIsNotCreated() {
+        String uniqueName = "IPROC_" + new SimpleDateFormat("yyMMddHHmmss").format(new Date());
+
+        File photoDirectory = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES).getAbsolutePath()+File.separatorChar+"ImageProc");
+
+        if(!photoDirectory.exists()) {
+            if (!photoDirectory.mkdirs()){
+                Log.println(ASSERT,"PhotoDir","mkdirs Failed");
+            }
+        }
+
+        File emptyFile = new File(photoDirectory,uniqueName+".jpeg");
+
+        return emptyFile;
     }
 }

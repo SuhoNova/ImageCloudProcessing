@@ -151,7 +151,7 @@ public class MainActivity extends AppCompatActivity{
             if (checkAndRequestPermission(this, Manifest.permission.CAMERA, RC_CAMERA)) {
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-                File _latestPhoto = getEmptyFile();
+                File _latestPhoto = Utility.getEmptyFileThatIsNotCreated();
 
                 // wrap File object into a content provider
                 // required for API >= 24
@@ -166,24 +166,6 @@ public class MainActivity extends AppCompatActivity{
         } catch (Exception e){
             Log.println(ASSERT,"gg",e.toString());
         }
-    }
-
-
-    private File getEmptyFile() {
-        String uniqueName = "IPROC_" + new SimpleDateFormat("yyMMddHHmmss").format(new Date());
-
-        File photoDirectory = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES).getAbsolutePath()+File.separatorChar+"ImageProc");
-
-        if(!photoDirectory.exists()) {
-            if (!photoDirectory.mkdirs()){
-                Log.println(ASSERT,"PhotoDir","mkdirs Failed");
-            }
-        }
-
-        File emptyFile = new File(photoDirectory,uniqueName+".jpeg");
-
-        return emptyFile;
     }
 
     private void onGalleryBtnClicked(){
