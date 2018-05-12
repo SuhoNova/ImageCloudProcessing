@@ -31,29 +31,46 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.io.IOUtils;
-import org.glassfish.jersey.media.multipart.*;  
+import org.glassfish.jersey.media.multipart.*;
+import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;  
 
 @Path("/process")
 public class ProcessImageResource {
 	
 	@POST
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
-	@Produces(MediaType.MULTIPART_FORM_DATA)
-	public Response processImage(InputStream inputStream) throws IOException {
+	public Response processImage(MultipartFormDataInput multipart) throws IOException {
 //		SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 //		dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 //		dateFormat.format(new Date());
 		
-		//byte[] imageData = IOUtils.toByteArray(inputStream);
-        BufferedImage image = ImageIO.read(inputStream);
-        if(image == null) {
-        	return Response.ok("ccopommmem on").build();
+		byte[] imageData = IOUtils.toByteArray(multipart.getFormDataPart("file", InputStream.class, null));
+        //BufferedImage image = ImageIO.read(myEntity.getData());
+	
+        ByteArrayInputStream bais = new ByteArrayInputStream(imageData);
+        try {
+        		BufferedImage image =  ImageIO.read(bais);
+            if(image == null) {
+            		return Response.ok("come on").build();
+            } else {
+	            	BufferedImage processedImage = BlurImage.blurImage(image);
+	            	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	            	ImageIO.write( processedImage, "jpg", baos );
+	            	baos.flush();
+	            	byte[] imageInByte = baos.toByteArray();
+	            	baos.close();
+	            	return Response.ok(imageInByte).build();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+        
 		//byte[] imageData = IOUtils.toByteArray(inputStream);
 		//InputStream in = new ByteArrayInputStream(imageData);
 		//BufferedImage bImageFromConvert = ImageIO.read(in);
 		//BufferedImage processedImage = BlurImage.blurImage(image);
-		return Response.ok(image).build();
+		//return Response.ok("kns").build();
 		/*
 		byte[] imageData = IOUtils.toByteArray(inputStream);
 		BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageData));
@@ -70,9 +87,9 @@ public class ProcessImageResource {
 	}
 	
 	@GET
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
 	public Response checkConnection() {
-		Response response = Response.status(200).entity("helpmeplz").type(MediaType.APPLICATION_JSON)
+		Response response = Response.status(200).entity("Senpai... notice me plssss").type(MediaType.APPLICATION_JSON)
 				.build();
 		
 		return response;

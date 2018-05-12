@@ -36,6 +36,12 @@
 		<artifactId>resteasy-servlet-initializer</artifactId>
 		<version>${resteasy.version}</version>
 	</dependency>
+	<!-- RESTEasy multipart library -->
+	<dependency>
+	    <groupId>org.jboss.resteasy</groupId>
+	    <artifactId>resteasy-multipart-provider</artifactId>
+	    <version>${resteasy.version}</version>
+	</dependency>
 	<!-- https://mvnrepository.com/artifact/org.glassfish.jersey.media/jersey-media-moxy -->
 	<dependency>
 	    <groupId>org.glassfish.jersey.media</groupId>
