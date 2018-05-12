@@ -8,25 +8,23 @@ import javax.ws.rs.core.Application;
 
 @ApplicationPath("/services")
 public class ProcessImageApplication extends Application {
-	  private Set<Object> singletons = new HashSet<Object>();
+//	  private Set<Object> singletons = new HashSet<Object>();
 	  private Set<Class<?>> classes = new HashSet<Class<?>>();
 
 	   public ProcessImageApplication()
 	   {
-		  // Register the ConertResource singleton to handle HTTP requests.
-		   ProcessImageResource resource = new ProcessImageResource();
+//		   ProcessImageResource resource = new ProcessImageResource();
 		   
-	      singletons.add(resource);
+//		   singletons.add(resource);
 	      
-	      // Register the ContextResolver class for JAXB.
-	      classes.add(ProcessImageResource.class);
+		   classes.add(ProcessImageResource.class);
 	   }
 
-	   @Override
-	   public Set<Object> getSingletons()
-	   {
-	      return singletons;
-	   }
+//	   @Override
+//	   public Set<Object> getSingletons()
+//	   {
+//	      return singletons;
+//	   }
 	   
 	   @Override
 	   public Set<Class<?>> getClasses()

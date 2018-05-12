@@ -69,8 +69,6 @@
 			  <artifactId>jetty-maven-plugin</artifactId>
 			<version>9.3.23.v20180228</version>
 		  	<configuration>
-	          	<!-- <useManifestOnlyJar>false</useManifestOnlyJar>
-	          	<useSystemClassLoader>false</useSystemClassLoader> -->
 	          	<httpConnector>
 					<port>8080</port>
 				</httpConnector>
