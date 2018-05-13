@@ -2,6 +2,7 @@ package com.bankai.bleach.imageprocessor;
 
 import android.animation.Animator;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.provider.MediaStore;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
@@ -22,7 +23,17 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 import static android.util.Log.ASSERT;
 
@@ -97,7 +108,7 @@ public class ResultActivity extends AppCompatActivity {
                 if(_doLocalProcessing){
                     timeTaken = localProcessing();
                 } else {
-                    // TODO implement REST code here
+                    timeTaken = remoteProcessing();
                 }
 
             } catch (Exception e) {
@@ -135,8 +146,62 @@ public class ResultActivity extends AppCompatActivity {
         }
         final long endTime = System.currentTimeMillis();
         long timeTaken = endTime - startTime;
-        Log.println(Log.ASSERT, "Time taken", timeTaken+"");
+        Log.println(Log.ASSERT, "Local Time taken", timeTaken+"");
 
+        return timeTaken;
+    }
+
+    private long remoteProcessing() throws Exception{
+
+        final String API_URL = "https://imagecloudprocessing.azurewebsites.net/services/process/";
+        final long startTime = System.currentTimeMillis();
+        final OkHttpClient client = new OkHttpClient();
+        Response _response;
+        Bitmap resultImage;
+
+        for(Uri imgUri: _uriList){
+            File outputFile = Utility.getEmptyFileThatIsNotCreated();
+            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imgUri);
+            bitmap = Utility.rotateImageIfRequired(this,bitmap,imgUri);
+
+            Date currentTime = Calendar.getInstance().getTime();
+            // Call remote server and execute Gaussian Blur
+            // TODO get rid of error
+            RequestBody requestBody = new MultipartBody().Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("date", currentTime)
+                    .addFormDataPart("image", bitmap)
+                    .addFormDataPart("function", Processing.gaussianBlur(bitmap))
+                    .build();
+
+            Request request = new Request.Builder()
+                    .header("Content-Type", "multipart/form-data")
+                    .url(API_URL)
+                    .post(requestBody)
+                    .build();
+
+            try (Response response = client.newCall(request).execute()) {
+                _response = response;
+                if (!response.isSuccessful()) {
+                    throw new IOException("Unexpected code " + response);
+                }
+            }
+
+            // Receive processed image from server
+
+            InputStream imageStream = _response.body().byteStream();
+            resultImage = BitmapFactory.decodeStream(imageStream);
+            FileOutputStream fos = new FileOutputStream(outputFile);
+            resultImage.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+
+            // Add image as uri to _processedUriList
+            Uri processedImgUri = FileProvider.getUriForFile(ResultActivity.this, "com.bankai.bleach.fileprovider", outputFile);
+
+            _processedUriList.add(processedImgUri);
+        }
+        final long endTime = System.currentTimeMillis();
+        long timeTaken = endTime - startTime;
+        Log.println(Log.ASSERT, "Local Time taken", timeTaken+"");
         return timeTaken;
     }
 
