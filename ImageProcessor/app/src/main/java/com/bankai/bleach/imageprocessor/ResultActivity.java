@@ -10,6 +10,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
@@ -28,7 +30,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -53,6 +58,11 @@ public class ResultActivity extends AppCompatActivity {
 
     private boolean _doLocalProcessing;
     private int _blurSigma;
+
+    private long _startTime;
+
+    private long _timeTaken = 0;
+    private AtomicInteger _remoteProcessingLeft = new AtomicInteger(0);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,29 +100,37 @@ public class ResultActivity extends AppCompatActivity {
         showProgressView(true);
 
         _doLocalProcessing = getIntent().getBooleanExtra(MainActivity.ID_DO_LOCAL_PROCESSING,true);
+
+        _startTime = System.currentTimeMillis();
+        Log.println(ASSERT,"Yes","Ni hao"+_startTime);
+
         if(_doLocalProcessing){
             setProgressText("Processing Locally");
+            new LocalProcessingTask().execute();
         } else {
             setProgressText("Processing Remotely");
+
+            if(_uriList.size()>1){
+                _remoteProcessingLeft.addAndGet(2);
+            } else {
+                _remoteProcessingLeft.addAndGet(1);
+            }
+
+            new RemoteProcessingTask(true).execute();
+            if(_uriList.size()>1){
+                new RemoteProcessingTask(false).execute();
+            }
         }
-        new ProcessingTask().execute();
     }
 
-    private void setTimeTaken(long time){
-        _timeTakenLabel.setText("Time taken: "+(double)time/1000+"s");
-    }
 
-    class ProcessingTask  extends AsyncTask<Void, Void, Long> {
+    class LocalProcessingTask extends AsyncTask<Void, Void, Long> {
 
         @Override
         protected Long doInBackground(Void... voids) {
             long timeTaken = 0;
             try {
-                if(_doLocalProcessing){
-                    timeTaken = localProcessing();
-                } else {
-                    timeTaken = remoteProcessing();
-                }
+                timeTaken = localProcessing();
 
             } catch (Exception e) {
                 Log.println(ASSERT,"Processing", e.toString());
@@ -123,17 +141,63 @@ public class ResultActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(Long timeTaken) {
-            setTimeTaken(timeTaken);
-            displayProcessingResults();
-            showProgressView(false);
+            _timeTaken += timeTaken;
+            processingDone();
         }
     }
 
-    private long localProcessing() throws Exception{
-        final long startTime = System.currentTimeMillis();
 
+    private void remoteProcessingDone(){
+        int processingLeft = _remoteProcessingLeft.decrementAndGet();
+        Log.println(ASSERT,"Yes","Two step to contacto "+System.currentTimeMillis());
+        if(processingLeft == 0){
+            final long endTime = System.currentTimeMillis();
+            long timeTaken = endTime - _startTime;
+            _timeTaken += timeTaken;
+            Log.println(ASSERT,"Remote time taken",_timeTaken+"");
+            processingDone();
+        }
+    }
+
+    private void processingDone(){
+        _timeTakenLabel.setText("Time taken: "+(double)_timeTaken/1000+"s");
+
+        Handler uiHandler = new Handler(Looper.getMainLooper());
+        uiHandler.post(() -> {
+            displayProcessingResults();
+            showProgressView(false);
+        });
+
+    }
+
+
+    class RemoteProcessingTask extends AsyncTask<Void, Void, Void> {
+        boolean firstServer;
+        public RemoteProcessingTask(boolean useFirstServer){
+            firstServer = useFirstServer;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                if(firstServer){
+                    remoteProcessing(_uriList.get(0),firstServer);
+                } else {
+                    remoteProcessing(_uriList.get(1),firstServer);
+                }
+
+            } catch (Exception e) {
+                Log.println(ASSERT,"Processing", e.toString());
+            }
+
+            return null;
+        }
+
+    }
+
+    private long localProcessing() throws Exception{
         for(Uri imgUri: _uriList) {
-            File outputFile = Utility.getEmptyFileThatIsNotCreated();
+            File outputFile = Utility.getEmptyFileThatIsNotCreated("");
             Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imgUri);
             bitmap = Utility.rotateImageIfRequired(this,bitmap,imgUri);
 
@@ -148,69 +212,78 @@ public class ResultActivity extends AppCompatActivity {
             _processedUriList.add(processedImgUri);
         }
         final long endTime = System.currentTimeMillis();
-        long timeTaken = endTime - startTime;
+        long timeTaken = endTime - _startTime;
         Log.println(Log.ASSERT, "Local Time taken", timeTaken+"");
 
         return timeTaken;
     }
 
-    private String cycleThroughServers(){
-     return "https://imagecloudprocessing.azurewebsites.net/services/process/";
+    private String getServerName(boolean firstServer){
+        if(firstServer){
+            return "https://imagecloudprocessing.azurewebsites.net/services/process/";
+        } else {
+            return "https://imagecloudprocessing2.azurewebsites.net/services/process/";
+        }
     }
 
-    private long remoteProcessing() throws Exception{
-        final long startTime = System.currentTimeMillis();
+    private void remoteProcessing(Uri imgUri, boolean firstServer) throws Exception{
         final OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(1, TimeUnit.HOURS)
                 .writeTimeout(1, TimeUnit.HOURS)
                 .readTimeout(1, TimeUnit.HOURS)
                 .build();
 
-        for(Uri imgUri: _uriList){
-            File outputFile = Utility.getEmptyFileThatIsNotCreated();
+        File outputFile = Utility.getEmptyFileThatIsNotCreated(firstServer+"");
 
-            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imgUri);
-            bitmap = Utility.rotateImageIfRequired(this,bitmap,imgUri);
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-            byte[] byteArray = stream.toByteArray();
-            bitmap.recycle();
+        Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imgUri);
+        bitmap = Utility.rotateImageIfRequired(this,bitmap,imgUri);
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+        byte[] byteArray = stream.toByteArray();
+        bitmap.recycle();
 
-            RequestBody requestBody = new MultipartBody.Builder()
-                    .setType(MultipartBody.FORM)
-                    .addFormDataPart("file", null, RequestBody.create(null,byteArray))
-                    .addFormDataPart("sigma", _blurSigma+"")
-                    .build();
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", null, RequestBody.create(null,byteArray))
+                .addFormDataPart("sigma", _blurSigma+"")
+                .build();
 
-            Request request = new Request.Builder()
-                    .header("Content-Type", "multipart/form-data")
-                    .url(cycleThroughServers())
-                    .post(requestBody)
-                    .build();
+        Request request = new Request.Builder()
+                .header("Content-Type", "multipart/form-data")
+                .url(getServerName(firstServer))
+                .post(requestBody)
+                .build();
 
-            try (Response response = client.newCall(request).execute()) {
-                if (!response.isSuccessful()) {
-                    throw new IOException("Unexpected code " + response);
-                } else {
-                    Bitmap resultImage;
+        Log.println(ASSERT,"Convert time taken",((double)(System.currentTimeMillis()-_startTime)/1000)+"");
 
-                    InputStream imageStream = response.body().byteStream();
-                    resultImage = BitmapFactory.decodeStream(imageStream);
-                    FileOutputStream fos = new FileOutputStream(outputFile);
-                    resultImage.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
 
-                    Uri processedImgUri = FileProvider.getUriForFile(ResultActivity.this, "com.bankai.bleach.fileprovider", outputFile);
-                    _processedUriList.add(processedImgUri);
-
-                }
             }
 
-        }
-        final long endTime = System.currentTimeMillis();
-        long timeTaken = endTime - startTime;
-        Log.println(Log.ASSERT, "Remote Time taken", timeTaken+"");
-        return timeTaken;
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                Log.println(ASSERT,"Yes","One step to contacto "+System.currentTimeMillis());
+
+                Bitmap resultImage;
+
+                InputStream imageStream = response.body().byteStream();
+                resultImage = BitmapFactory.decodeStream(imageStream);
+                FileOutputStream fos = new FileOutputStream(outputFile);
+                resultImage.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+
+                Uri processedImgUri = FileProvider.getUriForFile(ResultActivity.this, "com.bankai.bleach.fileprovider", outputFile);
+                _processedUriList.add(processedImgUri);
+
+                remoteProcessingDone();
+            }
+        });
     }
+
+
+
+
 
     public void setProgressText(String text){
         _progressText.setText(text);
@@ -223,7 +296,7 @@ public class ResultActivity extends AppCompatActivity {
             }
         } catch (Exception e) {
             Log.println(ASSERT,"Displaying Old", e.toString());
-            // TODO possible problem with Security Exception of trying to reuse Uris, non reproduceable. possibly solved, put here for safety
+            // possible problem with Security Exception of trying to reuse Uris, non reproduceable. possibly solved, put here for safety
             Toast.makeText(this,"Problem displaying Images from before",Toast.LENGTH_SHORT).show();
         }
         for(Uri uri : _processedUriList){

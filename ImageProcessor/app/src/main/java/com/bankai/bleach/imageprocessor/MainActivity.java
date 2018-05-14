@@ -123,53 +123,69 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
+    private boolean makeSureOnlyTwoImagesAllowed(){
+        if(_uriList.size() == 2){
+            Toast.makeText(this,"Only 2 images can be selected for processing. Long press on an image to remove it from being processed.",Toast.LENGTH_LONG).show();
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     private void onCameraBtnClicked(){
-        try {
-            if (checkAndRequestPermission(this, Manifest.permission.CAMERA, RC_CAMERA)) {
-                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if(makeSureOnlyTwoImagesAllowed()) {
+            try {
+                if (checkAndRequestPermission(this, Manifest.permission.CAMERA, RC_CAMERA)) {
+                    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-                _latestPhoto = Utility.getEmptyFileThatIsNotCreated();
+                    _latestPhoto = Utility.getEmptyFileThatIsNotCreated("");
 
-                // wrap File object into a content provider
-                // required for API >= 24
-                // See https://guides.codepath.com/android/Sharing-Content-with-Intents#sharing-files-with-api-24-or-higher
-                _latestPhotoUri = FileProvider.getUriForFile(MainActivity.this, "com.bankai.bleach.fileprovider", _latestPhoto);
-                intent.putExtra(MediaStore.EXTRA_OUTPUT, _latestPhotoUri);
+                    // wrap File object into a content provider
+                    // required for API >= 24
+                    // See https://guides.codepath.com/android/Sharing-Content-with-Intents#sharing-files-with-api-24-or-higher
+                    _latestPhotoUri = FileProvider.getUriForFile(MainActivity.this, "com.bankai.bleach.fileprovider", _latestPhoto);
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, _latestPhotoUri);
 
-                if (intent.resolveActivity(getPackageManager()) != null) {
-                    startActivityForResult(intent, RC_CAMERA);
+                    if (intent.resolveActivity(getPackageManager()) != null) {
+                        startActivityForResult(intent, RC_CAMERA);
+                    }
                 }
+            } catch (Exception e) {
+                Log.println(ASSERT, "Camera Button", e.toString());
             }
-        } catch (Exception e){
-            Log.println(ASSERT,"gg",e.toString());
         }
     }
 
     private void onGalleryBtnClicked(){
-        if(checkAndRequestPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE, RC_GALLERY)) {
-            Intent intent = new Intent(Intent.ACTION_PICK,
-                    android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            if (intent.resolveActivity(getPackageManager()) != null) {
-                startActivityForResult(intent, RC_GALLERY);
+        if(makeSureOnlyTwoImagesAllowed()) {
+            if (checkAndRequestPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE, RC_GALLERY)) {
+                Intent intent = new Intent(Intent.ACTION_PICK,
+                        android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                if (intent.resolveActivity(getPackageManager()) != null) {
+                    startActivityForResult(intent, RC_GALLERY);
+                }
             }
         }
     }
 
     private void onProcessingBtnClicked(boolean doLocalProcessing){
-        try{
-            int sigma = Integer.parseInt(_blurSigma.getText().toString());
-            if(sigma < 1) {
-                Toast.makeText(this,"Std  must be greater than 1.",Toast.LENGTH_SHORT).show();
-            } else {
-                Intent intent = new Intent(MainActivity.this, ResultActivity.class);
-                intent.putExtra(ID_DO_LOCAL_PROCESSING, doLocalProcessing);
-                intent.putExtra(ID_BLUR_SIGMA, sigma);
-                intent.putExtra(ID_URIS, _uriList);
-                startActivity(intent);
-                finish();
+        if(_uriList.size() > 0) {
+            try {
+                int sigma = Integer.parseInt(_blurSigma.getText().toString());
+                if (sigma < 1) {
+                    Toast.makeText(this, "Std  must be greater than 1.", Toast.LENGTH_SHORT).show();
+                } else {
+                    Intent intent = new Intent(MainActivity.this, ResultActivity.class);
+                    intent.putExtra(ID_DO_LOCAL_PROCESSING, doLocalProcessing);
+                    intent.putExtra(ID_BLUR_SIGMA, sigma);
+                    intent.putExtra(ID_URIS, _uriList);
+                    startActivity(intent);
+                }
+            } catch (NumberFormatException nfe) {
+                Toast.makeText(this, "Sigma must be a positive integer.", Toast.LENGTH_SHORT).show();
             }
-        } catch (NumberFormatException nfe){
-            Toast.makeText(this,"Sigma must be a positive integer.",Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Please select image(s) to process.", Toast.LENGTH_SHORT).show();
         }
     }
 

@@ -149,8 +149,8 @@ public class Utility {
         }
     }
 
-    public static File getEmptyFileThatIsNotCreated() {
-        String uniqueName = "IPROC_" + new SimpleDateFormat("yyMMddHHmmss").format(new Date()) + System.currentTimeMillis();
+    public static File getEmptyFileThatIsNotCreated(String optionalEnd) {
+        String uniqueName = "IPROC_" + new SimpleDateFormat("yyMMddHHmmss").format(new Date()) + System.currentTimeMillis() + optionalEnd;
 
         File photoDirectory = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES).getAbsolutePath()+File.separatorChar+"ImageProc");
