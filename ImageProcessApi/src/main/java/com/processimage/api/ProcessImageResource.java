@@ -26,10 +26,11 @@ public class ProcessImageResource {
 	@Produces("image/jpeg")
 	public byte[] processImage(MultipartFormDataInput multipart) throws IOException {
 		InputStream inputStream = multipart.getFormDataPart("file", InputStream.class, null);
+		int blurSigma = multipart.getFormDataPart("sigma", Integer.class, null);
 
         try {
         		BufferedImage image = ImageIO.read(inputStream);
-            	BufferedImage processedImage = BlurImage.blurImage(image);
+            	BufferedImage processedImage = BlurImage.blurImage(image, blurSigma);
             	
             	ByteArrayOutputStream baos = new ByteArrayOutputStream();
             	ImageIO.write(processedImage, "jpeg", baos );
