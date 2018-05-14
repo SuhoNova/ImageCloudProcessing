@@ -9,12 +9,12 @@ import boofcv.struct.image.GrayU8;
 
 public class Processing {
 
-    public static Bitmap gaussianBlur(Bitmap imageToBlur){
+    public static Bitmap gaussianBlur(Bitmap imageToBlur, int sigma){
         GrayU8 image = ConvertBitmap.bitmapToGray(imageToBlur, (GrayU8)null, null);
 
         GrayU8 blurred = new GrayU8(imageToBlur.getWidth(),imageToBlur.getHeight());
 
-        BlurImageOps.gaussian(image,blurred,30, -1,null);
+        BlurImageOps.gaussian(image,blurred,sigma, -1,null);
 
         return ConvertBitmap.grayToBitmap(blurred, Bitmap.Config.ARGB_8888);
     }

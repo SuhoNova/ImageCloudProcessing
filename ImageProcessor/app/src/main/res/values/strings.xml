@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ImageProcessor</string>
+    <string name="app_name">Image Blurrer</string>
 
     <string name="btn_camera">Camera</string>
     <string name="btn_gallery">Gallery</string>
@@ -14,4 +14,6 @@
     <string name="label_before">Before</string>
     <string name="label_after">to</string>
     <string name="label_time_taken">Time Taken: 0s</string>
+
+    <string name="label_proc_blur">Gaussian Blur σ: </string>
 </resources>

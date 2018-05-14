@@ -1,18 +1,18 @@
 package com.bankai.bleach.imageprocessor;
 
 import android.animation.Animator;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.provider.MediaStore;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -27,11 +27,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -55,6 +52,7 @@ public class ResultActivity extends AppCompatActivity {
     private ArrayList<Uri> _processedUriList;
 
     private boolean _doLocalProcessing;
+    private int _blurSigma;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,8 +79,10 @@ public class ResultActivity extends AppCompatActivity {
             }
         });
 
+        _blurSigma = getIntent().getIntExtra(MainActivity.ID_BLUR_SIGMA,1);
         TextView processingUsedLabel = findViewById(R.id.processingUsedLabel);
-        processingUsedLabel.setText(getIntent().getStringExtra(MainActivity.ID_PROCESSING_TYPE));
+        processingUsedLabel.setText("Gaussian blur with σ of "+_blurSigma);
+
 
         _uriList = (ArrayList<Uri>) getIntent().getSerializableExtra(MainActivity.ID_URIS);
         _processedUriList = new ArrayList<>();
@@ -137,7 +137,7 @@ public class ResultActivity extends AppCompatActivity {
             Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imgUri);
             bitmap = Utility.rotateImageIfRequired(this,bitmap,imgUri);
 
-            bitmap = Processing.gaussianBlur(bitmap);
+            bitmap = Processing.gaussianBlur(bitmap,_blurSigma);
 
 
             FileOutputStream fos = new FileOutputStream(outputFile);
@@ -154,9 +154,11 @@ public class ResultActivity extends AppCompatActivity {
         return timeTaken;
     }
 
-    private long remoteProcessing() throws Exception{
+    private String cycleThroughServers(){
+     return "https://imagecloudprocessing.azurewebsites.net/services/process/";
+    }
 
-        final String API_URL = "https://imagecloudprocessing.azurewebsites.net/services/process/";
+    private long remoteProcessing() throws Exception{
         final long startTime = System.currentTimeMillis();
         final OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(1, TimeUnit.HOURS)
@@ -164,8 +166,7 @@ public class ResultActivity extends AppCompatActivity {
                 .readTimeout(1, TimeUnit.HOURS)
                 .build();
 
-        //for(Uri imgUri: _uriList){
-            Uri imgUri =  _uriList.get(0);
+        for(Uri imgUri: _uriList){
             File outputFile = Utility.getEmptyFileThatIsNotCreated();
 
             Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imgUri);
@@ -174,15 +175,16 @@ public class ResultActivity extends AppCompatActivity {
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
             byte[] byteArray = stream.toByteArray();
             bitmap.recycle();
-            
+
             RequestBody requestBody = new MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
-                    .addFormDataPart("file", "image", RequestBody.create(null,byteArray))
+                    .addFormDataPart("file", null, RequestBody.create(null,byteArray))
+                    .addFormDataPart("sigma", _blurSigma+"")
                     .build();
 
             Request request = new Request.Builder()
                     .header("Content-Type", "multipart/form-data")
-                    .url(API_URL)
+                    .url(cycleThroughServers())
                     .post(requestBody)
                     .build();
 
@@ -203,7 +205,7 @@ public class ResultActivity extends AppCompatActivity {
                 }
             }
 
-        //}
+        }
         final long endTime = System.currentTimeMillis();
         long timeTaken = endTime - startTime;
         Log.println(Log.ASSERT, "Remote Time taken", timeTaken+"");

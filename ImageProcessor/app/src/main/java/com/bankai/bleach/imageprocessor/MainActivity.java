@@ -15,11 +15,10 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import java.io.File;
@@ -33,12 +32,12 @@ public class MainActivity extends AppCompatActivity{
     private final int RC_GALLERY = 2;
 
     public final static String ID_DO_LOCAL_PROCESSING = "3";
-    public final static String ID_PROCESSING_TYPE = "4";
+    public final static String ID_BLUR_SIGMA = "4";
     public final static String ID_URIS = "5";
 
     private HorizontalScrollView _horzScrollView;
     private LinearLayout _imgArray;
-    private Spinner _imgProcSpinner;
+    private EditText _blurSigma;
 
     private ArrayList<Uri> _uriList;
     private Uri _latestPhotoUri;
@@ -49,16 +48,17 @@ public class MainActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        setTitle("Image Processor");
+        setTitle("Image Blurrer");
 
         Button cameraBtn = findViewById(R.id.cameraButton);
         Button galleryBtn = findViewById(R.id.galleryButton);
         Button localBtn = findViewById(R.id.localProcButton);
         Button remoteBtn = findViewById(R.id.remoteProcButton);
 
+        _blurSigma = findViewById(R.id.sigmaText);
+
         _imgArray = findViewById(R.id.imgArray);
         _horzScrollView = findViewById(R.id.horizontalScrollView);
-        _imgProcSpinner = findViewById(R.id.imgProcSpinner);
 
         _uriList = new ArrayList<>();
 
@@ -87,16 +87,6 @@ public class MainActivity extends AppCompatActivity{
             }
         });
 
-        populateImgProcSpinner();
-
-    }
-
-    protected void populateImgProcSpinner(){
-        ArrayList<String> imageProcOptions = new ArrayList<>();
-        imageProcOptions.add("Gaussian Blur");
-        ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, imageProcOptions);
-        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        _imgProcSpinner.setAdapter(dataAdapter);
     }
 
     @Override
@@ -166,12 +156,21 @@ public class MainActivity extends AppCompatActivity{
     }
 
     private void onProcessingBtnClicked(boolean doLocalProcessing){
-        Intent intent = new Intent(MainActivity.this, ResultActivity.class);
-        intent.putExtra(ID_DO_LOCAL_PROCESSING,doLocalProcessing);
-        intent.putExtra(ID_PROCESSING_TYPE,(String)_imgProcSpinner.getSelectedItem());
-        intent.putExtra(ID_URIS,_uriList);
-        startActivity(intent);
-        finish();
+        try{
+            int sigma = Integer.parseInt(_blurSigma.getText().toString());
+            if(sigma < 1) {
+                Toast.makeText(this,"Std  must be greater than 1.",Toast.LENGTH_SHORT).show();
+            } else {
+                Intent intent = new Intent(MainActivity.this, ResultActivity.class);
+                intent.putExtra(ID_DO_LOCAL_PROCESSING, doLocalProcessing);
+                intent.putExtra(ID_BLUR_SIGMA, sigma);
+                intent.putExtra(ID_URIS, _uriList);
+                startActivity(intent);
+                finish();
+            }
+        } catch (NumberFormatException nfe){
+            Toast.makeText(this,"Sigma must be a positive integer.",Toast.LENGTH_SHORT).show();
+        }
     }
 
     private boolean checkAndRequestPermission(final Activity activity, final String permissionNeeded, final int permissionTracker)
