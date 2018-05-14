@@ -21,6 +21,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -28,7 +29,9 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
+import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -155,23 +158,26 @@ public class ResultActivity extends AppCompatActivity {
 
         final String API_URL = "https://imagecloudprocessing.azurewebsites.net/services/process/";
         final long startTime = System.currentTimeMillis();
-        final OkHttpClient client = new OkHttpClient();
-        Response _response;
-        Bitmap resultImage;
+        final OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(1, TimeUnit.HOURS)
+                .writeTimeout(1, TimeUnit.HOURS)
+                .readTimeout(1, TimeUnit.HOURS)
+                .build();
 
-        for(Uri imgUri: _uriList){
+        //for(Uri imgUri: _uriList){
+            Uri imgUri =  _uriList.get(0);
             File outputFile = Utility.getEmptyFileThatIsNotCreated();
+
             Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imgUri);
             bitmap = Utility.rotateImageIfRequired(this,bitmap,imgUri);
-
-            Date currentTime = Calendar.getInstance().getTime();
-            // Call remote server and execute Gaussian Blur
-            // TODO get rid of error
-            RequestBody requestBody = new MultipartBody().Builder()
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+            byte[] byteArray = stream.toByteArray();
+            bitmap.recycle();
+            
+            RequestBody requestBody = new MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
-                    .addFormDataPart("date", currentTime)
-                    .addFormDataPart("image", bitmap)
-                    .addFormDataPart("function", Processing.gaussianBlur(bitmap))
+                    .addFormDataPart("file", "image", RequestBody.create(null,byteArray))
                     .build();
 
             Request request = new Request.Builder()
@@ -181,27 +187,26 @@ public class ResultActivity extends AppCompatActivity {
                     .build();
 
             try (Response response = client.newCall(request).execute()) {
-                _response = response;
                 if (!response.isSuccessful()) {
                     throw new IOException("Unexpected code " + response);
+                } else {
+                    Bitmap resultImage;
+
+                    InputStream imageStream = response.body().byteStream();
+                    resultImage = BitmapFactory.decodeStream(imageStream);
+                    FileOutputStream fos = new FileOutputStream(outputFile);
+                    resultImage.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+
+                    Uri processedImgUri = FileProvider.getUriForFile(ResultActivity.this, "com.bankai.bleach.fileprovider", outputFile);
+                    _processedUriList.add(processedImgUri);
+
                 }
             }
 
-            // Receive processed image from server
-
-            InputStream imageStream = _response.body().byteStream();
-            resultImage = BitmapFactory.decodeStream(imageStream);
-            FileOutputStream fos = new FileOutputStream(outputFile);
-            resultImage.compress(Bitmap.CompressFormat.JPEG, 100, fos);
-
-            // Add image as uri to _processedUriList
-            Uri processedImgUri = FileProvider.getUriForFile(ResultActivity.this, "com.bankai.bleach.fileprovider", outputFile);
-
-            _processedUriList.add(processedImgUri);
-        }
+        //}
         final long endTime = System.currentTimeMillis();
         long timeTaken = endTime - startTime;
-        Log.println(Log.ASSERT, "Local Time taken", timeTaken+"");
+        Log.println(Log.ASSERT, "Remote Time taken", timeTaken+"");
         return timeTaken;
     }
 
