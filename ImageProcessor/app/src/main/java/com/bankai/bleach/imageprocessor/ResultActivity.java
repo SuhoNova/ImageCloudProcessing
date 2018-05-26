@@ -29,6 +29,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -48,6 +49,7 @@ public class ResultActivity extends AppCompatActivity {
 
     private TextView _progressText;
     private TextView _timeTakenLabel;
+    private TextView _remoteTimeLabel;
 
     private LinearLayout _beforeArray;
     private LinearLayout _afterArray;
@@ -60,9 +62,10 @@ public class ResultActivity extends AppCompatActivity {
     private int _blurSigma;
 
     private long _startTime;
-
     private long _timeTaken = 0;
     private AtomicInteger _remoteProcessingLeft = new AtomicInteger(0);
+
+    private ArrayList<Double> _remoteTimes;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,10 +76,13 @@ public class ResultActivity extends AppCompatActivity {
         _resultView = findViewById(R.id.resultView);
         _progressText = findViewById(R.id.progressText);
         _timeTakenLabel = findViewById(R.id.timeTakenLabel);
+        _remoteTimeLabel = findViewById(R.id.remoteTimeLabel);
         _beforeArray = findViewById(R.id.beforeArray);
         _beforeScrollView = findViewById(R.id.beforeScrollView);
         _afterArray = findViewById(R.id.afterArray);
         _afterScrollView = findViewById(R.id.afterScrollView);
+
+        _remoteTimes = new ArrayList<>();
 
         Button returnButton = findViewById(R.id.returnButton);
 
@@ -101,6 +107,7 @@ public class ResultActivity extends AppCompatActivity {
 
         _doLocalProcessing = getIntent().getBooleanExtra(MainActivity.ID_DO_LOCAL_PROCESSING,true);
 
+        // Time starts to be recorded
         _startTime = System.currentTimeMillis();
         Log.println(ASSERT,"Yes","Ni hao"+_startTime);
 
@@ -131,7 +138,7 @@ public class ResultActivity extends AppCompatActivity {
             long timeTaken = 0;
             try {
                 timeTaken = localProcessing();
-
+                // Time taken for local set
             } catch (Exception e) {
                 Log.println(ASSERT,"Processing", e.toString());
             }
@@ -146,24 +153,17 @@ public class ResultActivity extends AppCompatActivity {
         }
     }
 
-
-    private void remoteProcessingDone(){
-        int processingLeft = _remoteProcessingLeft.decrementAndGet();
-        Log.println(ASSERT,"Yes","Two step to contacto "+System.currentTimeMillis());
-        if(processingLeft == 0){
-            final long endTime = System.currentTimeMillis();
-            long timeTaken = endTime - _startTime;
-            _timeTaken += timeTaken;
-            Log.println(ASSERT,"Remote time taken",_timeTaken+"");
-            processingDone();
-        }
-    }
-
     private void processingDone(){
-        _timeTakenLabel.setText("Time taken: "+(double)_timeTaken/1000+"s");
-
         Handler uiHandler = new Handler(Looper.getMainLooper());
         uiHandler.post(() -> {
+            _timeTakenLabel.setText("Time taken: "+(double)_timeTaken/1000+"s");
+            if(!_doLocalProcessing){
+                if(_uriList.size()>1){
+                    _remoteTimeLabel.setText("Remote time: "+ _remoteTimes.get(1)+"s, "+_remoteTimes.get(0)+"s");
+                } else {
+                    _remoteTimeLabel.setText("Remote time: "+_remoteTimes.get(0)+"s");
+                }
+            }
             displayProcessingResults();
             showProgressView(false);
         });
@@ -195,6 +195,16 @@ public class ResultActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Processes the image chosen to be processed locally
+     *
+     * Steps:
+     * 1) Read file into bitmap
+     * 2) Carry out gaussian blurring on the bitmap
+     * 3) Write the processed bitmap into a file
+     *
+     * @return Time to do the steps above on all the chosen images
+     */
     private long localProcessing() throws Exception{
         for(Uri imgUri: _uriList) {
             File outputFile = Utility.getEmptyFileThatIsNotCreated("");
@@ -226,6 +236,32 @@ public class ResultActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Records time taken to do remotely process the image when all images have been processed
+     */
+    private void remoteProcessingDone(){
+        int processingLeft = _remoteProcessingLeft.decrementAndGet();
+        Log.println(ASSERT,"Yes","Two step to contacto "+System.currentTimeMillis());
+        if(processingLeft == 0){
+            final long endTime = System.currentTimeMillis();
+            long timeTaken = endTime - _startTime;
+            _timeTaken += timeTaken;
+            Log.println(ASSERT,"Remote time taken",_timeTaken+"");
+            processingDone();
+        }
+    }
+
+    /**
+     * Remotely processed 1 image based on imgUri
+     *
+     * Steps:
+     * 1) Read file into bitmap
+     * 2) Convert bitmap into byte array
+     * (3) Make asynchronous REST call to the service, uploading the bitmap byte array
+     *  - Callback writes the processed image into a file
+     *
+     * calls {@link #remoteProcessing(Uri, boolean)} at the end
+     */
     private void remoteProcessing(Uri imgUri, boolean firstServer) throws Exception{
         final OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(1, TimeUnit.HOURS)
@@ -268,6 +304,12 @@ public class ResultActivity extends AppCompatActivity {
 
                 Bitmap resultImage;
 
+                try {
+                    _remoteTimes.add(Double.parseDouble(response.header("remoteTime")));
+                }catch (Exception e){
+                    Log.println(ASSERT,"Buzz",e.toString());
+                }
+
                 InputStream imageStream = response.body().byteStream();
                 resultImage = BitmapFactory.decodeStream(imageStream);
                 FileOutputStream fos = new FileOutputStream(outputFile);
@@ -280,10 +322,6 @@ public class ResultActivity extends AppCompatActivity {
             }
         });
     }
-
-
-
-
 
     public void setProgressText(String text){
         _progressText.setText(text);
