@@ -25,7 +25,7 @@ Invoke-RestMethod -Uri $apiUrl -Headers @{Authorization=("Basic {0}" -f $base64A
 ```
 
 ### Using the Android application
-To install the app on your phone:
+To install and run the app on your phone:
 1. Ensure that your device is an Android phone running Android 5.0 (API 21) or above.
 2. Get the prof-image.apk from the root of this repository.
 3. Run the installer file in step 2 using a file manager on your phone.
