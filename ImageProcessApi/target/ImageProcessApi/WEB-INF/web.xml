@@ -4,18 +4,4 @@
       xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
       http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
       version="3.0">
-      
-      <servlet>
-	    <servlet-name>ImageProcessApi</servlet-name>
-	    <servlet-class>org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher</servlet-class>
-	    <init-param>
-	        <param-name>javax.ws.rs.Application</param-name>
-	        <param-value>com.processimage.api.ProcessImageApplication</param-value>
-	    </init-param>
-	    <load-on-startup>1</load-on-startup>
-	</servlet>
-	<servlet-mapping>
-	    <servlet-name>ImageProcessApi</servlet-name>
-	    <url-pattern>/*</url-pattern>
-	</servlet-mapping>
 </web-app>

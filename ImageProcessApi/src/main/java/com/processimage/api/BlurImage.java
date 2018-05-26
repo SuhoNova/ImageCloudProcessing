@@ -5,7 +5,15 @@ import java.awt.image.BufferedImage;
 import boofcv.alg.filter.blur.BlurImageOps;
 import boofcv.io.image.ConvertBufferedImage;
 import boofcv.struct.image.GrayU8;
-
+/**
+ * This is a static class that blurs an image
+ * It takes a bufferedimage and a sigma value as input
+ * and gives back a blurred bufferedimage
+ * 
+ * It uses an external library called Boofcv to handle the image processing
+ * and coverting to required image data structure (GrayU8) before processing 
+ *
+ */
 public class BlurImage {
 	public static BufferedImage blurImage(BufferedImage imageToBlur, int sigma){
 		GrayU8 image = new GrayU8(imageToBlur.getWidth(),imageToBlur.getHeight());
