@@ -180,6 +180,7 @@ public class MainActivity extends AppCompatActivity{
                     intent.putExtra(ID_BLUR_SIGMA, sigma);
                     intent.putExtra(ID_URIS, _uriList);
                     startActivity(intent);
+                    finish();
                 }
             } catch (NumberFormatException nfe) {
                 Toast.makeText(this, "Sigma must be a positive integer.", Toast.LENGTH_SHORT).show();
