@@ -17,7 +17,7 @@ The settings required for this web server has now been set. Now lets go deploy i
 There are multiple ways to deploy WAR file to the web server.
 One way I chose to do it is through FTP with powershell using the guide provided by Microsoft (Deploy your app to Azure App Service with a ZIP or WAR file)[https://docs.microsoft.com/en-us/azure/app-service/app-service-deploy-zip#deploy-war-file]
 
-'''
+```
 #PowerShell
 $username = "<deployment_user>"
 $password = "<deployment_password>"
@@ -26,4 +26,4 @@ $apiUrl = "https://<app_name>.scm.azurewebsites.net/api/zipdeploy"
 $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $username, $password)))
 $userAgent = "powershell/1.0"
 Invoke-RestMethod -Uri $apiUrl -Headers @{Authorization=("Basic {0}" -f $base64AuthInfo)} -UserAgent $userAgent -Method POST -InFile $filePath -ContentType "multipart/form-data"
-'''
+```
