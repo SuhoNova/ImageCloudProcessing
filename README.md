@@ -15,7 +15,7 @@ If you are planning on deploying WAR file to the web server through FTP, go to "
 The settings required for this web server has now been set. Now lets go deploy it!
 
 There are multiple ways to deploy WAR file to the web server.
-One way I chose to do it is through FTP with powershell using the guide provided by Microsoft (Deploy your app to Azure App Service with a ZIP or WAR file)[https://docs.microsoft.com/en-us/azure/app-service/app-service-deploy-zip#deploy-war-file]
+One way I chose to do it is through FTP with powershell using the guide provided by Microsoft [Deploy your app to Azure App Service with a ZIP or WAR file](https://docs.microsoft.com/en-us/azure/app-service/app-service-deploy-zip#deploy-war-file)
 
 ```
 #PowerShell
