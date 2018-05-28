@@ -36,6 +36,8 @@ To run the application in Android Studio:
 1. Import the project 'ImageProcessor' into Android Studio by: click 'File' -> 'Open' and select the ImageProcessor folder.
 2. Run the application by clicking 'Run' > 'Run App'.
 
+### Raw Test Data
+You can view our test data that we have collected in the folder "Raw Test Data"
 
 ### Contributors
 * Yao Jian Yap (RemRinRamChi) - yyap601@aucklanduni.ac.nz
